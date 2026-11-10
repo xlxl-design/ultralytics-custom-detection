@@ -16,9 +16,9 @@ Examples:
     >>> torch.onnx.export(m, x, f)
     >>> subprocess.run(f"onnxslim {f} {f} && open {f}", shell=True, check=True)  # pip install onnxslim
 """
-from .add import CA,ECA,SAM,RFA
-from .bifpn import BiFPN
 
+from .add import CA, ECA, RFA, SAM
+from .bifpn import BiFPN
 from .block import (
     C1,
     C2,
@@ -115,14 +115,18 @@ __all__ = (
     "C2PSA",
     "C3",
     "C3TR",
+    "CA",
     "CBAM",
     "CIB",
     "DFL",
+    "ECA",
     "ELAN1",
     "MLP",
     "OBB",
     "OBB26",
     "PSA",
+    "RFA",
+    "SAM",
     "SPP",
     "SPPELAN",
     "SPPF",
@@ -131,9 +135,9 @@ __all__ = (
     "ADown",
     "Attention",
     "BNContrastiveHead",
+    "BiFPN",
     "Bottleneck",
     "BottleneckCSP",
-    "BiFPN",
     "C2f",
     "C2fAttn",
     "C2fCIB",
@@ -190,10 +194,6 @@ __all__ = (
     "YOLOESegment",
     "YOLOESegment26",
     "v10Detect",
-    'CA',
-    'ECA',
-    'SAM',
-    'RFA',
 )
 
 from .custom import CSPPC, EMA
