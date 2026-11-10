@@ -1,6 +1,5 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+
 
 # -------------------------- 4. RFA 递归特征聚合注意力 --------------------------
 class RFA(nn.Module):
@@ -10,7 +9,7 @@ class RFA(nn.Module):
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
         :param scale: 特征缩放系数
-        :param kernel_size: 卷积核大小
+        :param kernel_size: 卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1
@@ -22,14 +21,18 @@ class RFA(nn.Module):
         self.align = nn.Conv2d(c1 // scale, c1, 1, bias=False)
 
         # 递归卷积（多分支特征聚合）
-        self.conv0 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv1 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv2 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv3 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
+        self.conv0 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv1 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv2 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv3 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
 
         self.bn = nn.BatchNorm2d(c1)
         self.act = nn.SiLU()
