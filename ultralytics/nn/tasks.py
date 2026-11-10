@@ -1,6 +1,5 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
-from .attmodule import *
 import contextlib
 import pickle
 import re
@@ -9,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.autobackend import check_class_names
 from ultralytics.nn.modules import (
@@ -19,7 +18,13 @@ from ultralytics.nn.modules import (
     C2PSA,
     C3,
     C3TR,
+    CSPPC,
     ELAN1,
+    EMA,
+    # CA,
+    # ECA,
+    # SAM,
+    # RFA,
     OBB,
     OBB26,
     PSA,
@@ -74,12 +79,6 @@ from ultralytics.nn.modules import (
     YOLOESegment,
     YOLOESegment26,
     v10Detect,
-    CSPPC,
-    EMA,
-    # CA,
-    # ECA,
-    # SAM,
-    # RFA,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -106,12 +105,15 @@ from ultralytics.utils.torch_utils import (
     time_sync,
 )
 
-globals()['CA'] = CA
-globals()['ECA'] = ECA
-globals()['SAM'] = SAM
-globals()['RFA'] = RFA
-globals()['SE'] = SE
-globals()['CBAM'] = CBAM
+from .attmodule import *
+
+globals()["CA"] = CA
+globals()["ECA"] = ECA
+globals()["SAM"] = SAM
+globals()["RFA"] = RFA
+globals()["SE"] = SE
+globals()["CBAM"] = CBAM
+
 
 class BaseModel(torch.nn.Module):
     """Base class for all YOLO models in the Ultralytics family.
@@ -1389,11 +1391,9 @@ class SafeClass:
 
     def __init__(self, *args, **kwargs):
         """Initialize SafeClass instance, ignoring all arguments."""
-        pass
 
     def __call__(self, *args, **kwargs):
         """Run SafeClass instance, ignoring all arguments."""
-        pass
 
 
 class SafeUnpickler(pickle.Unpickler):
@@ -1616,7 +1616,6 @@ def parse_model(d, ch, verbose=True):
             A2C2f,
             CSPPC,
             EMA,
-            
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments
@@ -1641,7 +1640,7 @@ def parse_model(d, ch, verbose=True):
     )
 
     # 新增以下
-    att_modules = frozenset({CA,ECA,SAM,RFA,SE,CBAM})
+    att_modules = frozenset({CA, ECA, SAM, RFA, SE, CBAM})
     # 以上
 
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
@@ -1702,7 +1701,7 @@ def parse_model(d, ch, verbose=True):
         # 新增
         elif m in att_modules:
             c2 = ch[f] if isinstance(f, int) else ch[f[-1]]
-            args = [c2,*args]
+            args = [c2, *args]
         # 以上
         elif m in frozenset(
             {

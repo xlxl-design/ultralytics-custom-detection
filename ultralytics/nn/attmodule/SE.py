@@ -1,8 +1,9 @@
-import torch
-import torch.nn as nn
+from torch import nn
+
 
 class SE(nn.Module):
-    """极简版SE注意力模块（适配YOLO11，可直接在yaml中调用）"""
+    """极简版SE注意力模块（适配YOLO11，可直接在yaml中调用）."""
+
     def __init__(self, c1, c2=None, reduction=16):
         # c1: 输入通道数, c2: 输出通道数（默认和输入一致）, reduction: 降维系数
         super().__init__()
@@ -14,7 +15,7 @@ class SE(nn.Module):
             nn.Linear(c1, c1 // reduction, bias=False),
             nn.ReLU(inplace=True),
             nn.Linear(c1 // reduction, c2, bias=False),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
