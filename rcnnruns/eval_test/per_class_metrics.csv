@@ -1,0 +1,2 @@
+class_id,class_name,gt_count,pred_count,ap50,best_f1,best_thresh,precision_at_best,recall_at_best
+0,class0,1443,1489,0.959941,0.960142,0.978868,0.986832,0.934858
