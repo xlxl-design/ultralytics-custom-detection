@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .conv import Conv
 
@@ -14,8 +14,7 @@ class BiFPN(nn.Module):
 
         self.eps = eps
         self.align = nn.ModuleList(
-            nn.Identity() if c == out_channels else Conv(c, out_channels, k=1, s=1)
-            for c in in_channels
+            nn.Identity() if c == out_channels else Conv(c, out_channels, k=1, s=1) for c in in_channels
         )
         self.w = nn.Parameter(torch.ones(len(in_channels), dtype=torch.float32))
         # self.act = nn.ReLU(inplace=False)
@@ -23,7 +22,9 @@ class BiFPN(nn.Module):
 
     def forward(self, x):
         if not isinstance(x, (list, tuple)) or len(x) != len(self.align):
-            raise ValueError(f"BiFPN expects {len(self.align)} inputs, but got {type(x)} with length {len(x) if isinstance(x, (list, tuple)) else 'N/A'}.")
+            raise ValueError(
+                f"BiFPN expects {len(self.align)} inputs, but got {type(x)} with length {len(x) if isinstance(x, (list, tuple)) else 'N/A'}."
+            )
 
         # Normalize non-negative fusion weights so the feature sum is scale-stable.
         w = torch.relu(self.w)
@@ -33,4 +34,3 @@ class BiFPN(nn.Module):
         for i, xi in enumerate(x):
             y = y + w[i] * self.align[i](xi)
         return self.out_conv(y)
-
