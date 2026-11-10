@@ -1,8 +1,9 @@
-import cv2
-import numpy as np
 import os
 import shutil
 from pathlib import Path
+
+import cv2
+import numpy as np
 
 
 def adjust_annotation_rotation(label_lines, img_w, img_h, angle):
@@ -12,7 +13,7 @@ def adjust_annotation_rotation(label_lines, img_w, img_h, angle):
     :param img_w: 原始图像宽度
     :param img_h: 原始图像高度
     :param angle: 旋转角度（仅支持90/180/270°，避免非整数旋转导致的复杂计算）
-    :return: 调整后的标注行列表
+    :return: 调整后的标注行列表.
     """
     new_labels = []
     for line in label_lines:
@@ -82,7 +83,7 @@ def augment_single_image(img_path, label_path, save_img_dir, save_label_dir, aug
     :param label_path: 原始标注路径
     :param save_img_dir: 增强后图像保存目录
     :param save_label_dir: 增强后标注保存目录
-    :param augment_type: 增强类型：flip（水平翻转）/ rotate90/ rotate180/ rotate270/ brightness
+    :param augment_type: 增强类型：flip（水平翻转）/ rotate90/ rotate180/ rotate270/ brightness.
     """
     # 读取图像
     img = cv2.imread(img_path)
@@ -95,7 +96,7 @@ def augment_single_image(img_path, label_path, save_img_dir, save_label_dir, aug
 
     # 读取标注
     if os.path.exists(label_path):
-        with open(label_path, 'r', encoding='utf-8') as f:
+        with open(label_path, encoding="utf-8") as f:
             label_lines = f.readlines()
     else:
         print(f"警告：标注文件 {label_path} 不存在，跳过")
@@ -131,7 +132,6 @@ def augment_single_image(img_path, label_path, save_img_dir, save_label_dir, aug
         # 调整标注
         new_label_lines = adjust_annotation_rotation(label_lines, w, h, angle)
 
-
     elif augment_type == "brightness":
         # 亮度调整：随机增减亮度（替代固定+30）
         beta_range = (-50, 80)  # 可自定义明暗范围
@@ -149,21 +149,23 @@ def augment_single_image(img_path, label_path, save_img_dir, save_label_dir, aug
     save_label_path = os.path.join(save_label_dir, f"{augment_type}_{label_name}")
 
     cv2.imwrite(save_img_path, aug_img)
-    with open(save_label_path, 'w', encoding='utf-8') as f:
+    with open(save_label_path, "w", encoding="utf-8") as f:
         f.writelines(new_label_lines)
 
     print(f"完成增强：{save_img_path}")
 
 
-def batch_augment_dataset(raw_img_dir, raw_label_dir, save_root_dir, augment_types=["flip", "rotate90","rotate18","rotate270", "brightness"]):
+def batch_augment_dataset(raw_img_dir, raw_label_dir, save_root_dir, augment_types=None):
     """
     批量增强数据集
     :param raw_img_dir: 原始图像目录（如 dataset/images/train）
     :param raw_label_dir: 原始标注目录（如 dataset/labels/train）
     :param save_root_dir: 增强后数据保存根目录（会自动创建images/labels子目录）
-    :param augment_types: 要执行的增强类型列表
+    :param augment_types: 要执行的增强类型列表.
     """
     # 创建保存目录
+    if augment_types is None:
+        augment_types = ["flip", "rotate90", "rotate18", "rotate270", "brightness"]
     save_img_dir = os.path.join(save_root_dir, "images")
     save_label_dir = os.path.join(save_root_dir, "labels")
     os.makedirs(save_img_dir, exist_ok=True)
@@ -172,7 +174,7 @@ def batch_augment_dataset(raw_img_dir, raw_label_dir, save_root_dir, augment_typ
     # 复制原始文件到目标目录（保留原始数据）
     print("正在复制原始数据...")
     for img_file in os.listdir(raw_img_dir):
-        if img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+        if img_file.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
             # 复制图像
             shutil.copy(os.path.join(raw_img_dir, img_file), os.path.join(save_img_dir, img_file))
             # 复制对应标注
@@ -184,7 +186,7 @@ def batch_augment_dataset(raw_img_dir, raw_label_dir, save_root_dir, augment_typ
     # 批量执行增强
     print("开始批量增强...")
     for img_file in os.listdir(raw_img_dir):
-        if not img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+        if not img_file.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
             continue
         # 拼接原始图像和标注路径
         img_path = os.path.join(raw_img_dir, img_file)
@@ -203,7 +205,7 @@ if __name__ == "__main__":
     RAW_IMG_DIR = r"datasettest/images/train"  # 你的原始训练图像目录
     RAW_LABEL_DIR = r"datasettest/labels/train"  # 你的原始训练标注目录
     SAVE_ROOT_DIR = r"datasettest_aug/train"  # 增强后数据保存目录
-    AUGMENT_TYPES = ["flip", "rotate90", "rotate180", "rotate270","brightness"]  # 要执行的增强类型
+    AUGMENT_TYPES = ["flip", "rotate90", "rotate180", "rotate270", "brightness"]  # 要执行的增强类型
     # =============================================================
 
     # 执行批量增强
