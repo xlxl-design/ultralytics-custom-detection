@@ -1,39 +1,30 @@
+from __future__ import annotations
+
 import os
-from pathlib import Path
 import time
-from typing import List
+from pathlib import Path
 
 import torch
-from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-import torchvision
-from torchvision.transforms import functional as F
+from torch.utils.data import DataLoader, Dataset
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-
+from torchvision.transforms import functional as F
 
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 
 class YOLODetectionDataset(Dataset):
-    """
-    支持目录结构（推荐）:
-    dataset/
-      images/
-        train/xxx.jpg
-        val/xxx.jpg
-      labels/
-        train/xxx.txt
-        val/xxx.txt
+    """支持目录结构（推荐）: dataset/ images/ train/xxx.jpg val/xxx.jpg labels/ train/xxx.txt val/xxx.txt.
 
-    YOLO txt 每行:
-    class_id cx cy w h   (归一化到 0~1)
+    YOLO txt 每行: class_id cx cy w h (归一化到 0~1)
     """
+
     def __init__(self, images_dir: str, labels_dir: str):
         self.images_dir = Path(images_dir)
         self.labels_dir = Path(labels_dir)
 
-        self.image_paths: List[Path] = []
+        self.image_paths: list[Path] = []
         for p in self.images_dir.rglob("*"):
             if p.suffix.lower() in IMG_EXTS:
                 self.image_paths.append(p)
@@ -62,7 +53,7 @@ class YOLODetectionDataset(Dataset):
         labels = []
 
         if label_path.exists():
-            with open(label_path, "r", encoding="utf-8") as f:
+            with open(label_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -150,7 +141,7 @@ def train_one_epoch(model, optimizer, loader, device, epoch, print_freq=20):
             print(f"Epoch {epoch} | Iter {i}/{len(loader)} | Loss {losses.item():.4f} | {detail}")
 
     avg = epoch_loss / max(1, len(loader))
-    print(f"Epoch {epoch} done, avg loss={avg:.4f}, time={time.time()-start:.1f}s")
+    print(f"Epoch {epoch} done, avg loss={avg:.4f}, time={time.time() - start:.1f}s")
     return avg
 
 
@@ -173,11 +164,9 @@ def main():
     train_labels = "/mnt/workspace/dataset/labels/train"
     val_images = "/mnt/workspace/dataset/images/val"
     val_labels = "/mnt/workspace/dataset/labels/val"
-    test_images = "/mnt/workspace/dataset/images/test"
-    test_labels = "/mnt/workspace/dataset/labels/test"
 
-    yolo_nc = 1               # 你的 YOLO 类别数（不含背景）
-    num_classes = yolo_nc + 1 # FasterRCNN 需要 + 背景类
+    yolo_nc = 1  # 你的 YOLO 类别数（不含背景）
+    num_classes = yolo_nc + 1  # FasterRCNN 需要 + 背景类
 
     batch_size = 2
     num_workers = 2
@@ -192,16 +181,11 @@ def main():
 
     train_ds = YOLODetectionDataset(train_images, train_labels)
     val_ds = YOLODetectionDataset(val_images, val_labels)
-    
 
     train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, collate_fn=collate_fn
+        train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers, collate_fn=collate_fn
     )
-    val_loader = DataLoader(
-        val_ds, batch_size=1, shuffle=False,
-        num_workers=num_workers, collate_fn=collate_fn
-    )
+    val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=num_workers, collate_fn=collate_fn)
 
     model = build_model(num_classes).to(device)
 

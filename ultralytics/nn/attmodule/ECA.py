@@ -1,6 +1,5 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+
 
 # -------------------------- 2. ECA 高效通道注意力 --------------------------
 class ECA(nn.Module):
@@ -9,7 +8,7 @@ class ECA(nn.Module):
         Efficient Channel Attention 高效通道注意力
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
-        :param k_size: 一维卷积核大小
+        :param k_size: 一维卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1

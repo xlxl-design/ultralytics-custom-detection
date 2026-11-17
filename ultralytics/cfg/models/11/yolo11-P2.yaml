@@ -34,28 +34,26 @@ head:
   - [[-1, 6], 1, Concat, [1]] # cat backbone P4
   - [-1, 2, C3k2, [512, False]] # 13    # P5上采样得到P4和backbone的P4融合，得到P4融合层
 
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  #14
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] #14
   - [[-1, 4], 1, Concat, [1]] # cat backbone P3
   - [-1, 2, C3k2, [256, False]] # 16 (P3/8-small)  #P4上采样得到P3和backboneP3融合，得到P3融合层
 
   # P3 -> P2 (新增)
-  - [ -1, 1, nn.Upsample, [ None, 2, "nearest" ] ]          # 17 (from 14)
-  - [ [ -1, 2 ], 1, Concat, [ 1 ] ]                           # cat backbone P2 (2)
-  - [ -1, 2, C3k2, [ 128, False ] ]                         # 19 (P2)   ← 最终P2检测层
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 17 (from 14)
+  - [[-1, 2], 1, Concat, [1]] # cat backbone P2 (2)
+  - [-1, 2, C3k2, [128, False]] # 19 (P2)   ← 最终P2检测层
 
-  - [-1, 1, Conv, [128, 3, 2]]  #20
+  - [-1, 1, Conv, [128, 3, 2]] #20
   - [[-1, 16], 1, Concat, [1]] # cat head P3
   - [-1, 2, C3k2, [256, False]] # 22 (P4/16-medium)   #P2检测层下采样和16层P3融合层融合，得到P3检测层
 
-  - [-1, 1, Conv, [256, 3, 2]]  #23
+  - [-1, 1, Conv, [256, 3, 2]] #23
   - [[-1, 13], 1, Concat, [1]] # cat head P4
   - [-1, 2, C3k2, [512, True]] # 25 (P5/32-large)    #P3检测层下采样和13P4融合层融合，得到P4检测层
 
-  - [ -1, 1, Conv, [ 512, 3, 2 ] ]  #26
-  - [ [ -1, 10 ], 1, Concat, [ 1 ] ] # cat head P5
-  - [ -1, 2, C3k2, [ 1024, True ] ] # 28 (P5/32-large)    #P4检测层下采样得到P5和backboneP5融合，得到P5检测层
+  - [-1, 1, Conv, [512, 3, 2]] #26
+  - [[-1, 10], 1, Concat, [1]] # cat head P5
+  - [-1, 2, C3k2, [1024, True]] # 28 (P5/32-large)    #P4检测层下采样得到P5和backboneP5融合，得到P5检测层
 
-
-  - [[19, 22, 25,28], 1, Detect, [nc]] # Detect(P3, P4, P5)
-
+  - [[19, 22, 25, 28], 1, Detect, [nc]] # Detect(P3, P4, P5)
 
