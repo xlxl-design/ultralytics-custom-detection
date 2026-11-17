@@ -38,12 +38,12 @@ head:
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
   - [[-1, 4], 1, BiFPN, [1]] # cat backbone P3
   - [-1, 2, C3k2, [256, False]] # 16 (P3/8-small)
-  
-  - [ -1, 1, nn.Upsample, [ None, 2, "nearest" ] ]          # 17 (from 14)
-  - [ [ -1, 2 ], 1, BiFPN, [ 1 ] ]                           # cat backbone P2 (2)
-  - [ -1, 2, C3k2, [ 128, False ] ] 
-  
-  - [-1, 1, Conv, [128, 3, 2]]  #20
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 17 (from 14)
+  - [[-1, 2], 1, BiFPN, [1]] # cat backbone P2 (2)
+  - [-1, 2, C3k2, [128, False]]
+
+  - [-1, 1, Conv, [128, 3, 2]] #20
   - [[-1, 17], 1, BiFPN, [1]] # cat head P3
   - [-1, 2, C3k2, [256, False]] # 22 (P4/16-medium)   #P2检测层下采样和16层P3融合层融合，得到P3检测层
 
@@ -56,5 +56,4 @@ head:
   - [-1, 2, C3k2, [1024, True]] # 22 (P5/32-large)
 
   - [[20, 23, 26, 29], 1, Detect, [nc]] # Detect(P3, P4, P5)
-
 

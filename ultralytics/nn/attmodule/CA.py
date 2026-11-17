@@ -1,6 +1,5 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
 
 
 class CA(nn.Module):
@@ -24,7 +23,7 @@ class CA(nn.Module):
         self.conv_w = nn.Conv1d(mid_channels, c2, kernel_size=1, bias=False)
 
     def forward(self, x):
-        b, c, h, w = x.shape
+        _b, c, h, w = x.shape
         assert c == self.c1, f"输入通道{c}≠初始化通道{self.c1}"
 
         # 1. 池化并展平为 3D 张量 [b, c, h] / [b, c, w]

@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+
 
 # -------------------------- 3. SAM 空间注意力 --------------------------
 class SAM(nn.Module):
@@ -9,7 +9,7 @@ class SAM(nn.Module):
         Spatial Attention Module 空间注意力
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
-        :param kernel_size: 卷积核大小
+        :param kernel_size: 卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1

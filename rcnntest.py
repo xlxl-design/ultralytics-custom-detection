@@ -1,39 +1,34 @@
-import os
-import json
-import csv
-from pathlib import Path
-from typing import List, Dict, Tuple
+from __future__ import annotations
 
+import csv
+import json
+import os
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-import matplotlib.pyplot as plt
-
-from torchvision.transforms import functional as F
+from torch.utils.data import DataLoader, Dataset
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.ops import box_iou
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
-
+from torchvision.transforms import functional as F
 
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 
 class YOLOTestDataset(Dataset):
-    """
-    dataset/
-      images/test/xxx.jpg
-      labels/test/xxx.txt
+    """dataset/ images/test/xxx.jpg labels/test/xxx.txt.
 
     YOLO label: class cx cy w h (normalized)
     """
+
     def __init__(self, images_dir: str, labels_dir: str):
         self.images_dir = Path(images_dir)
         self.labels_dir = Path(labels_dir)
-        self.image_paths: List[Path] = sorted(
-            [p for p in self.images_dir.rglob("*") if p.suffix.lower() in IMG_EXTS]
-        )
+        self.image_paths: list[Path] = sorted([p for p in self.images_dir.rglob("*") if p.suffix.lower() in IMG_EXTS])
         if len(self.image_paths) == 0:
             raise ValueError(f"No images found in: {images_dir}")
 
@@ -56,7 +51,7 @@ class YOLOTestDataset(Dataset):
         gt_labels = []
 
         if label_path.exists():
-            with open(label_path, "r", encoding="utf-8") as f:
+            with open(label_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -107,9 +102,7 @@ def build_model(num_classes: int):
 
 
 def compute_ap_from_pr(recall: np.ndarray, precision: np.ndarray) -> float:
-    """
-    Compute AP by precision envelope integration.
-    """
+    """Compute AP by precision envelope integration."""
     if recall.size == 0:
         return 0.0
 
@@ -127,17 +120,15 @@ def compute_ap_from_pr(recall: np.ndarray, precision: np.ndarray) -> float:
 
 
 def evaluate_and_collect(model, loader, device, num_classes, score_thresh=0.001):
-    """
-    1) torchmetrics: mAP@[.50:.95] 等
-    2) 手工收集每类检测结果，用于PR/F1曲线
+    """1) torchmetrics: mAP@[.50:.95] 等 2) 手工收集每类检测结果，用于PR/F1曲线.
     """
     model.eval()
     map_metric = MeanAveragePrecision(box_format="xyxy", iou_type="bbox")
 
     # 每类预测记录: list[{"img_id": int, "score": float, "box": tensor(4)}]
-    preds_by_class: Dict[int, List[Dict]] = {c: [] for c in range(num_classes)}
+    preds_by_class: dict[int, list[dict]] = {c: [] for c in range(num_classes)}
     # 每类GT记录: dict[(img_id, cls)] = tensor(N,4)
-    gt_by_img_cls: Dict[Tuple[int, int], torch.Tensor] = {}
+    gt_by_img_cls: dict[tuple[int, int], torch.Tensor] = {}
 
     img_global_id = 0
 
@@ -186,15 +177,19 @@ def evaluate_and_collect(model, loader, device, num_classes, score_thresh=0.001)
                         gt_by_img_cls[(img_global_id, c)] = cls_boxes.clone()
 
                 # for torchmetrics
-                preds_for_metric.append({
-                    "boxes": boxes.to(torch.float32),
-                    "scores": scores.to(torch.float32),
-                    "labels": labels.to(torch.int64),
-                })
-                gts_for_metric.append({
-                    "boxes": gt_boxes,
-                    "labels": gt_labels,
-                })
+                preds_for_metric.append(
+                    {
+                        "boxes": boxes.to(torch.float32),
+                        "scores": scores.to(torch.float32),
+                        "labels": labels.to(torch.int64),
+                    }
+                )
+                gts_for_metric.append(
+                    {
+                        "boxes": gt_boxes,
+                        "labels": gt_labels,
+                    }
+                )
 
                 img_global_id += 1
 
@@ -205,11 +200,7 @@ def evaluate_and_collect(model, loader, device, num_classes, score_thresh=0.001)
 
 
 def compute_pr_f1_per_class(preds_by_class, gt_by_img_cls, num_classes, iou_thresh=0.5):
-    """
-    对每个类别计算:
-    - PR曲线
-    - AP50
-    - F1-Confidence曲线
+    """对每个类别计算: - PR曲线 - AP50 - F1-Confidence曲线.
     """
     per_class = {}
 
@@ -218,7 +209,7 @@ def compute_pr_f1_per_class(preds_by_class, gt_by_img_cls, num_classes, iou_thre
         preds = sorted(preds, key=lambda x: x["score"], reverse=True)
 
         # GT总数
-        gt_keys = [k for k in gt_by_img_cls.keys() if k[1] == c]
+        gt_keys = [k for k in gt_by_img_cls if k[1] == c]
         npos = int(sum(gt_by_img_cls[k].shape[0] for k in gt_keys))
 
         if len(preds) == 0:
@@ -420,17 +411,34 @@ def save_curves_and_tables(per_class_metrics, class_names, out_dir):
     csv_path = Path(out_dir) / "per_class_metrics.csv"
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "class_id", "class_name", "gt_count", "pred_count",
-            "ap50", "best_f1", "best_thresh", "precision_at_best", "recall_at_best"
-        ])
+        writer.writerow(
+            [
+                "class_id",
+                "class_name",
+                "gt_count",
+                "pred_count",
+                "ap50",
+                "best_f1",
+                "best_thresh",
+                "precision_at_best",
+                "recall_at_best",
+            ]
+        )
         for c, m in per_class_metrics.items():
             cname = class_names[c] if class_names and c < len(class_names) else f"class_{c}"
-            writer.writerow([
-                c, cname, m["gt_count"], m["pred_count"],
-                f"{m['ap50']:.6f}", f"{m['best_f1']:.6f}", f"{m['best_thresh']:.6f}",
-                f"{m['best_precision']:.6f}", f"{m['best_recall']:.6f}"
-            ])
+            writer.writerow(
+                [
+                    c,
+                    cname,
+                    m["gt_count"],
+                    m["pred_count"],
+                    f"{m['ap50']:.6f}",
+                    f"{m['best_f1']:.6f}",
+                    f"{m['best_thresh']:.6f}",
+                    f"{m['best_precision']:.6f}",
+                    f"{m['best_recall']:.6f}",
+                ]
+            )
 
     return macro_best_f1, macro_best_conf
 
@@ -464,13 +472,7 @@ def main():
     print("Device:", device)
 
     ds = YOLOTestDataset(test_images, test_labels)
-    loader = DataLoader(
-        ds,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-        collate_fn=collate_fn
-    )
+    loader = DataLoader(ds, batch_size=batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn)
 
     model = build_model(num_classes).to(device)
 
@@ -485,22 +487,17 @@ def main():
         model=model,
         loader=loader,
         device=device,
-        num_classes=yolo_nc,   # 这里传前景类别数
-        score_thresh=0.001
+        num_classes=yolo_nc,  # 这里传前景类别数
+        score_thresh=0.001,
     )
 
     per_class_metrics = compute_pr_f1_per_class(
-        preds_by_class=preds_by_class,
-        gt_by_img_cls=gt_by_img_cls,
-        num_classes=yolo_nc,
-        iou_thresh=0.5
+        preds_by_class=preds_by_class, gt_by_img_cls=gt_by_img_cls, num_classes=yolo_nc, iou_thresh=0.5
     )
 
     os.makedirs(output_dir, exist_ok=True)
     macro_best_f1, macro_best_conf = save_curves_and_tables(
-        per_class_metrics=per_class_metrics,
-        class_names=class_names,
-        out_dir=output_dir
+        per_class_metrics=per_class_metrics, class_names=class_names, out_dir=output_dir
     )
 
     # 保存 summary.json

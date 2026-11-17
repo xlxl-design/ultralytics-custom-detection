@@ -1,6 +1,5 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
 
 
 # -------------------------- 1. CA 坐标注意力 --------------------------
@@ -10,7 +9,7 @@ class CA(nn.Module):
         Coordinate Attention 坐标注意力
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
-        :param reduction: 降维系数
+        :param reduction: 降维系数.
         """
         super().__init__()
         c2 = c2 if c2 else c1
@@ -26,7 +25,7 @@ class CA(nn.Module):
         self.conv_w = nn.Conv2d(mid_channels, c2, kernel_size=1, padding=0, bias=False)
 
     def forward(self, x):
-        b, c, h, w = x.shape
+        _b, _c, h, w = x.shape
         # 沿高度/宽度池化
         x_h = self.pool_h(x)  # [b, c, h, 1]
         x_w = self.pool_w(x).permute(0, 1, 3, 2)  # [b, c, w, 1]
@@ -55,7 +54,7 @@ class ECA(nn.Module):
         Efficient Channel Attention 高效通道注意力
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
-        :param k_size: 一维卷积核大小
+        :param k_size: 一维卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1
@@ -81,7 +80,7 @@ class SAM(nn.Module):
         Spatial Attention Module 空间注意力
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
-        :param kernel_size: 卷积核大小
+        :param kernel_size: 卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1
@@ -111,7 +110,7 @@ class RFA(nn.Module):
         :param c1: 输入通道数
         :param c2: 输出通道数（默认等于输入通道数）
         :param scale: 特征缩放系数
-        :param kernel_size: 卷积核大小
+        :param kernel_size: 卷积核大小.
         """
         super().__init__()
         c2 = c2 if c2 else c1
@@ -123,14 +122,18 @@ class RFA(nn.Module):
         self.align = nn.Conv2d(c1 // scale, c1, 1, bias=False)
 
         # 递归卷积（多分支特征聚合）
-        self.conv0 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv1 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv2 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
-        self.conv3 = nn.Conv2d(c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale,
-                               bias=False)
+        self.conv0 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv1 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv2 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
+        self.conv3 = nn.Conv2d(
+            c1 // scale, c1 // scale, kernel_size, padding=kernel_size // 2, groups=c1 // scale, bias=False
+        )
 
         self.bn = nn.BatchNorm2d(c1)
         self.act = nn.SiLU()
@@ -149,5 +152,3 @@ class RFA(nn.Module):
         y = self.bn(y)
         y = self.act(y)
         return x + y
-
-
